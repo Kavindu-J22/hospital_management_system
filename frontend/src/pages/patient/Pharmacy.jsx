@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
+import PatientSidebar from '../../components/patient/PatientSidebar';
 
 // Fix for default marker icons in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -94,9 +95,12 @@ const Pharmacy = () => {
     ];
 
     return (
-        <div className="h-screen flex flex-col font-sans overflow-hidden bg-white">
-            {/* Header */}
-            <header className="h-[70px] border-b border-gray-200 flex items-center justify-between px-6 shrink-0 bg-white z-20">
+        <div className="h-screen flex font-sans overflow-hidden bg-white">
+            <PatientSidebar />
+
+            <div className="flex-1 flex flex-col overflow-hidden relative">
+                {/* Header */}
+                <header className="h-[70px] border-b border-gray-200 flex items-center justify-between px-6 shrink-0 bg-white z-20">
                 <div className="flex items-center gap-6">
                     <button onClick={() => navigate('/dashboard')} className="flex items-center gap-2 text-xl font-bold text-[#0f172a] hover:text-blue-600 transition-colors">
                         <div className="bg-blue-600 text-white p-1 rounded-md">
@@ -269,7 +273,8 @@ const Pharmacy = () => {
                 </div>
             </div>
         </div>
-    );
+    </div>
+);
 };
 
 export default Pharmacy;

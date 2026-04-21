@@ -55,7 +55,14 @@ const DoctorSidebar = () => {
                 <button className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-lg font-bold transition-colors text-gray-500 hover:bg-gray-100 text-[14px]">
                     <Settings size={20} /> Settings
                 </button>
-                <button onClick={() => navigate('/doctor')} className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-lg font-bold transition-colors text-red-500 hover:bg-red-50 text-[14px]">
+                <button 
+                    onClick={() => {
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('user');
+                        navigate('/doctor');
+                    }} 
+                    className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-lg font-bold transition-colors text-red-500 hover:bg-red-50 text-[14px]"
+                >
                     <LogOut size={20} /> Log Out
                 </button>
             </div>

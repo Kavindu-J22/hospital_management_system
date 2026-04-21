@@ -5,54 +5,14 @@ import {
     Shield, Lock, Info, Receipt, CreditCard as CardIcon, DollarSign, HeartPulse
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import PatientSidebar from '../../components/patient/PatientSidebar';
 
 const Billing = () => {
     const navigate = useNavigate();
 
     return (
         <div className="min-h-screen bg-[#f8f9fa] flex font-sans">
-
-            {/* Sidebar from Dashboard Layout */}
-            <aside className="w-64 bg-white border-r border-gray-100 flex flex-col justify-between fixed h-full shadow-sm z-20">
-                <div>
-                    <div className="p-6 flex items-center gap-3 border-b border-white">
-                        <div className="bg-blue-600 text-white p-1.5 rounded-lg shadow-sm">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
-                        </div>
-                        <span className="text-xl font-bold text-gray-900 tracking-tight">Behealthy</span>
-                    </div>
-
-                    <nav className="px-4 py-8 space-y-2">
-                        <button onClick={() => navigate('/dashboard')} className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-colors">
-                            <LayoutDashboard size={20} />
-                            Dashboard
-                        </button>
-                        <a href="#" className="flex items-center gap-3 px-4 py-3 text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-colors">
-                            <Calendar size={20} />
-                            Appointments
-                        </a>
-                        <a href="#" className="flex items-center gap-3 px-4 py-3 text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-colors">
-                            <FileStack size={20} />
-                            Prescriptions
-                        </a>
-                        <button className="w-full flex items-center gap-3 px-4 py-3 bg-[#f0f4ff] text-blue-700 font-semibold rounded-xl">
-                            <CreditCard size={20} />
-                            Billing
-                        </button>
-                        <button onClick={() => navigate('/pharmacy')} className="w-full flex items-center gap-3 px-4 py-3 text-gray-500 font-medium hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-colors">
-                            <Store size={20} />
-                            Pharmacy
-                        </button>
-                    </nav>
-                </div>
-
-                <div className="p-4 mb-4">
-                    <button className="w-full bg-[#db2736] hover:bg-red-700 text-white font-extrabold py-4 px-4 rounded-2xl shadow-xl shadow-red-500/30 flex items-center justify-center gap-3 transition-colors tracking-wide text-[15px]">
-                        <AlertTriangle size={22} className="text-white" strokeWidth={2.5} />
-                        EMERGENCY AMBULANCE
-                    </button>
-                </div>
-            </aside>
+            <PatientSidebar />
 
             {/* Main Content Area */}
             <div className="flex-1 ml-64 flex flex-col h-screen">

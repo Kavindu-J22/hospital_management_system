@@ -9,6 +9,7 @@ import {
   Map as MapIcon,
   FileText,
   Bed,
+  LogOut,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -136,6 +137,21 @@ const AdminSidebar = () => {
         >
           <UserPlus size={20} className={iconClass("/admin/new-patient")} /> New
           Patient
+        </button>
+
+        <div className="py-2">
+          <div className="border-t border-gray-100"></div>
+        </div>
+
+        <button
+          onClick={() => {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navigate("/");
+          }}
+          className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-lg font-bold transition-colors text-red-500 hover:bg-red-50 text-[15px]"
+        >
+          <LogOut size={20} /> Log Out
         </button>
       </nav>
     </aside>
