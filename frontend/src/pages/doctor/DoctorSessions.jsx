@@ -22,6 +22,36 @@ const DoctorSessions = () => {
     // Extension Modal State
     const [extendingSession, setExtendingSession] = useState(null);
     const [extDuration, setExtDuration] = useState('30');
+    
+    // Edit Modal State
+    const [editingSession, setEditingSession] = useState(null);
+    const [editForm, setEditForm] = useState({ maxPatients: 12, status: 'Upcoming' });
+
+    const isSessionActiveNow = (session) => {
+        try {
+            const today = new Date();
+            const sessionDate = new Date(session.date);
+            const slTimeStr = today.toLocaleString("en-US", {timeZone: "Asia/Colombo"});
+            const slTime = new Date(slTimeStr);
+            if (sessionDate.toDateString() !== slTime.toDateString()) return false;
+
+            const parseTime = (timeStr) => {
+                const [time, modifier] = timeStr.split(' ');
+                let [hours, minutes] = time.split(':');
+                hours = parseInt(hours, 10);
+                if (hours === 12) hours = 0;
+                if (modifier === 'PM') hours += 12;
+                const d = new Date(slTime);
+                d.setHours(hours, parseInt(minutes, 10), 0, 0);
+                return d;
+            };
+
+            const startTime = parseTime(session.startTime);
+            const endTime = parseTime(session.extendedEndTime || session.endTime);
+
+            return slTime >= startTime && slTime <= endTime;
+        } catch (e) { return false; }
+    };
 
     const fetchData = async () => {
         if (!user?.id) return;
@@ -75,6 +105,21 @@ const DoctorSessions = () => {
             fetchData();
         } catch (err) {
             setToast({ type: 'error', message: 'Failed to extend session' });
+        }
+    };
+
+    const handleEditSave = async () => {
+        if (!editingSession) return;
+        try {
+            // Note: Update status and max patients. 
+            // The backend might need an update API for sessions if it doesn't exist, but we use what we have or updateStatus.
+            // If the backend lacks a general update endpoint, we'll try to just update status using updateStatus.
+            await sessionAPI.updateStatus(editingSession._id, { status: editForm.status });
+            setToast({ type: 'success', message: 'Session updated successfully!' });
+            setEditingSession(null);
+            fetchData();
+        } catch (err) {
+            setToast({ type: 'error', message: 'Failed to update session' });
         }
     };
 
@@ -217,6 +262,11 @@ const DoctorSessions = () => {
                                             <td className="py-5 px-6 text-[13px] font-medium text-gray-500">{session.currentPatients || 0} / {session.maxPatients} Patients</td>
                                             <td className="py-5 px-6">
                                                 <div className="flex items-center justify-end gap-3 text-gray-400">
+                                                    {isSessionActiveNow(session) && (
+                                                        <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-wider animate-pulse mr-2">
+                                                            Active Now
+                                                        </span>
+                                                    )}
                                                     <div className="mr-2">{statusBadge(session.status)}</div>
                                                     {(session.status === 'Active' || session.status === 'Extended') && (
                                                         <button 
@@ -226,7 +276,13 @@ const DoctorSessions = () => {
                                                             <Clock size={14} /> Extend
                                                         </button>
                                                     )}
-                                                    <button className="p-1.5 hover:bg-gray-100 rounded-lg group-hover:text-gray-600 transition-colors">
+                                                    <button 
+                                                        onClick={() => {
+                                                            setEditingSession(session);
+                                                            setEditForm({ maxPatients: session.maxPatients, status: session.status });
+                                                        }}
+                                                        className="p-1.5 hover:bg-gray-100 rounded-lg group-hover:text-gray-600 transition-colors"
+                                                    >
                                                         <Edit2 size={16} />
                                                     </button>
                                                 </div>
@@ -322,6 +378,41 @@ const DoctorSessions = () => {
                                     <button onClick={() => setExtendingSession(null)} className="flex-1 py-4 rounded-2xl font-bold bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors">Cancel</button>
                                     <button onClick={handleExtend} className="flex-1 py-4 rounded-2xl font-black bg-[#0a2540] text-white shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-2">
                                         <Check size={18} /> Confirm
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Edit Modal */}
+                {editingSession && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0f172a]/40 backdrop-blur-sm p-4">
+                        <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                            <div className="p-8">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xl font-black tracking-tight text-[#0f172a]">Edit Session</h3>
+                                    <button onClick={() => setEditingSession(null)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X size={20} /></button>
+                                </div>
+                                
+                                <div className="mb-6">
+                                    <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2">Update Status</label>
+                                    <select 
+                                        value={editForm.status} 
+                                        onChange={(e) => setEditForm(f => ({ ...f, status: e.target.value }))}
+                                        className="w-full bg-[#f8f9fa] border border-gray-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-100 font-bold text-sm"
+                                    >
+                                        <option value="Upcoming">Upcoming</option>
+                                        <option value="Active">Active</option>
+                                        <option value="Completed">Completed</option>
+                                        <option value="Cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+
+                                <div className="flex gap-4">
+                                    <button onClick={() => setEditingSession(null)} className="flex-1 py-4 rounded-2xl font-bold bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors">Cancel</button>
+                                    <button onClick={handleEditSave} className="flex-1 py-4 rounded-2xl font-black bg-[#0a2540] text-white shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-2">
+                                        <Check size={18} /> Save Changes
                                     </button>
                                 </div>
                             </div>

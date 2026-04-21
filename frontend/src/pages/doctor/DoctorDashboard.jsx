@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-    Bell, Plus, User, Calendar, TrendingUp, History, Activity
+    Bell, Plus, User, Calendar, TrendingUp, History, Activity, Clock, Bed
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DoctorSidebar from '../../components/doctor/DoctorSidebar';
@@ -96,7 +96,7 @@ const DoctorDashboard = () => {
                             </div>
                             <div>
                                 <p className="text-[13px] font-bold text-gray-400 mb-1">Total Patients</p>
-                                <h3 className="text-[32px] font-black text-[#0f172a] leading-none tracking-tight">{loading ? '—' : mySessions.reduce((a, s) => a + (s.currentPatients || 0), 0)}</h3>
+                                <h3 className="text-[32px] font-black text-[#0f172a] leading-none tracking-tight">{loading ? '—' : [...mySessions, ...completedSessions].reduce((a, s) => a + (s.currentPatients || 0), 0)}</h3>
                             </div>
                         </div>
                         {/* Upcoming Sessions */}

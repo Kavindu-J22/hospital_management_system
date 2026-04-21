@@ -28,6 +28,7 @@ import DoctorRegistration from './pages/doctor/DoctorRegistration';
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
 import DoctorPrescriptions from './pages/doctor/DoctorPrescriptions';
 import NewPrescription from './pages/doctor/NewPrescription';
+import DoctorPatients from './pages/doctor/DoctorPatients';
 import DoctorSessions from './pages/doctor/DoctorSessions';
 import NewSession from './pages/admin/NewSession';
 import RoomInventory from './pages/admin/RoomInventory';
@@ -68,6 +69,7 @@ function App() {
       <Route path="/doctor" element={<DoctorLogin />} />
       <Route path="/doctor/register" element={<DoctorRegistration />} />
       <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
+      <Route path="/doctor/patients" element={<DoctorPatients />} />
       <Route path="/doctor/prescriptions" element={<DoctorPrescriptions />} />
       <Route path="/doctor/new-prescription" element={<NewPrescription />} />
       <Route path="/doctor/sessions" element={<DoctorSessions />} />

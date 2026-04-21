@@ -116,6 +116,40 @@ const NewSession = ({ role = 'doctor' }) => {
         }
         setSubmitting(true);
         try {
+            let finalSlots = [...selectedSlots];
+            
+            if (form.autoIntervals) {
+                const parse = (s) => {
+                    const [time, mod] = s.split(' ');
+                    let [h, m] = time.split(':');
+                    h = parseInt(h); m = parseInt(m);
+                    if (mod === 'PM' && h < 12) h += 12;
+                    if (mod === 'AM' && h === 12) h = 0;
+                    const d = new Date();
+                    d.setHours(h, m, 0, 0);
+                    return d;
+                };
+
+                try {
+                    let current = parse(form.startTime);
+                    const stop = parse(form.endTime);
+                    const generated = [];
+                    
+                    while (current < stop) {
+                        let hh = current.getHours();
+                        const mm = current.getMinutes().toString().padStart(2, '0');
+                        const mmod = hh >= 12 ? 'PM' : 'AM';
+                        if (hh > 12) hh -= 12;
+                        if (hh === 0) hh = 12;
+                        generated.push(`${hh.toString().padStart(2, '0')}:${mm} ${mmod}`);
+                        current.setMinutes(current.getMinutes() + 30);
+                    }
+                    
+                    // Merge and unique
+                    finalSlots = Array.from(new Set([...finalSlots, ...generated]));
+                } catch (e) { console.error('Interval generation failed', e); }
+            }
+
             await sessionAPI.create({
                 doctorId: form.doctor,
                 roomId: form.room,
@@ -124,7 +158,7 @@ const NewSession = ({ role = 'doctor' }) => {
                 endTime: form.endTime,
                 maxPatients: Number(form.capacity),
                 sessionType,
-                timeSlots: selectedSlots,
+                timeSlots: finalSlots,
             });
             setToast({ type: 'success', message: 'Session created successfully!' });
             setTimeout(() => navigate('/' + role + '/sessions'), 1800);

@@ -40,7 +40,7 @@ const DoctorSidebar = () => {
                 <button onClick={() => navigate('/doctor/sessions')} className={navItemClass('/doctor/sessions')}>
                     <Calendar size={20} className={iconClass('/doctor/sessions')} /> My Sessions
                 </button>
-                <button className={navItemClass('/doctor/patients')}>
+                <button onClick={() => navigate('/doctor/patients')} className={navItemClass('/doctor/patients')}>
                     <Users size={20} className={iconClass('/doctor/patients')} /> Patients
                 </button>
                 <button onClick={() => navigate('/doctor/prescriptions')} className={navItemClass('/doctor/prescriptions')}>

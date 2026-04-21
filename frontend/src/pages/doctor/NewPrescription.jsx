@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Bell, Search, PlusSquare,
@@ -6,6 +6,7 @@ import {
     FileEdit, CheckCircle, ShieldCheck, AlertCircle, X
 } from 'lucide-react';
 import Toast from '../../components/shared/Toast';
+import { patientAPI, prescriptionAPI } from '../../services/api';
 
 const FieldError = ({ msg }) => msg ? (
     <p className="text-red-500 text-[11px] font-bold mt-1.5 flex items-center gap-1">
@@ -13,16 +14,17 @@ const FieldError = ({ msg }) => msg ? (
     </p>
 ) : null;
 
-const patients = [
-    { id: '#4421-99', name: 'John Doe', age: 34, gender: 'M' },
-    { id: '#3312-44', name: 'Amara Silva', age: 28, gender: 'F' },
-    { id: '#5503-27', name: 'Michael Chen', age: 52, gender: 'M' },
-];
+const calcAge = (dob) => {
+    if (!dob) return '—';
+    const diff = Date.now() - new Date(dob).getTime();
+    return Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
+};
 
 const NewPrescription = () => {
     const navigate = useNavigate();
+    const [dbPatients, setDbPatients] = useState([]);
     const [search, setSearch] = useState('');
-    const [selectedPatient, setSelectedPatient] = useState(patients[0]);
+    const [selectedPatient, setSelectedPatient] = useState(null);
     const [showDropdown, setShowDropdown] = useState(false);
     const [form, setForm] = useState({
         medication: '', dosage: 'Once daily (QD)', duration: '7', durationUnit: 'Days', notes: ''
@@ -31,11 +33,21 @@ const NewPrescription = () => {
     const [toast, setToast] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     const [saved, setSaved] = useState(false);
+    
+    useEffect(() => {
+        const fetchP = async () => {
+            try {
+                const res = await patientAPI.getAll({ limit: 100 });
+                setDbPatients(res.data.data || []);
+            } catch (err) { console.error(err); }
+        };
+        fetchP();
+    }, []);
 
     const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
-    const filteredPatients = patients.filter(p =>
-        p.name.toLowerCase().includes(search.toLowerCase()) || p.id.includes(search)
+    const filteredPatients = dbPatients.filter(p =>
+        p.fullName?.toLowerCase().includes(search.toLowerCase()) || p.patientId?.includes(search)
     );
 
     const validate = () => {
@@ -47,21 +59,40 @@ const NewPrescription = () => {
         return e;
     };
 
-    const handleIssue = (e) => {
+    const handleIssue = async (e) => {
         e.preventDefault();
         const errs = validate();
+        if (!selectedPatient) errs.patient = 'Please select a patient';
         setErrors(errs);
         if (Object.keys(errs).length > 0) {
             setToast({ type: 'error', message: 'Please fix errors before issuing.' });
             return;
         }
         setSubmitting(true);
-        setTimeout(() => {
-            setSubmitting(false);
-            setToast({ type: 'success', message: `Prescription for ${selectedPatient.name} issued successfully!` });
+        try {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            await prescriptionAPI.create({
+                patientId: selectedPatient._id,
+                doctorId: user.id,
+                medications: [{
+                    name: form.medication,
+                    dosage: form.dosage,
+                    frequency: form.dosage,
+                    duration: form.duration,
+                    durationUnit: form.durationUnit,
+                    instructions: form.notes
+                }],
+                notes: form.notes
+            });
+            setToast({ type: 'success', message: `Prescription for ${selectedPatient.fullName} issued successfully!` });
             setForm({ medication: '', dosage: 'Once daily (QD)', duration: '7', durationUnit: 'Days', notes: '' });
+            setSelectedPatient(null);
             setTimeout(() => navigate('/doctor/prescriptions'), 1800);
-        }, 1300);
+        } catch (err) {
+            setToast({ type: 'error', message: err.response?.data?.message || 'Failed to issue prescription.' });
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     const handleDraft = () => {
@@ -157,17 +188,17 @@ const NewPrescription = () => {
                                         <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl z-10 overflow-hidden">
                                             {filteredPatients.length > 0 ? filteredPatients.map(p => (
                                                 <button
-                                                    key={p.id}
+                                                    key={p._id}
                                                     type="button"
                                                     onClick={() => { setSelectedPatient(p); setSearch(''); setShowDropdown(false); }}
                                                     className="w-full px-5 py-4 text-left flex items-center gap-4 hover:bg-blue-50 transition-colors"
                                                 >
                                                     <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 font-black text-xs">
-                                                        {p.name.split(' ').map(n => n[0]).join('')}
+                                                        {(p.fullName || '').split(' ').map(n => n[0]).join('')}
                                                     </div>
                                                     <div>
-                                                        <p className="font-extrabold text-sm">{p.name}</p>
-                                                        <p className="text-xs text-gray-400 font-bold">{p.id} | Age: {p.age} | {p.gender}</p>
+                                                        <p className="font-extrabold text-sm">{p.fullName}</p>
+                                                        <p className="text-xs text-gray-400 font-bold">#{p.patientId} | Age: {calcAge(p.dateOfBirth)} | {p.gender}</p>
                                                     </div>
                                                 </button>
                                             )) : (
@@ -181,11 +212,11 @@ const NewPrescription = () => {
                                     <div className="bg-white border-2 border-blue-100 rounded-2xl p-5 flex items-center justify-between">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 font-black text-sm">
-                                                {selectedPatient.name.split(' ').map(n => n[0]).join('')}
+                                                {(selectedPatient?.fullName || '').split(' ').map(n => n[0]).join('')}
                                             </div>
                                             <div>
-                                                <p className="font-extrabold text-[#0f172a] text-[16px]">{selectedPatient.name}</p>
-                                                <p className="text-[13px] font-bold text-gray-400">ID: {selectedPatient.id} | Age: {selectedPatient.age} | {selectedPatient.gender}</p>
+                                                <p className="font-extrabold text-[#0f172a] text-[16px]">{selectedPatient.fullName}</p>
+                                                <p className="text-[13px] font-bold text-gray-400">ID: #{selectedPatient.patientId} | Age: {calcAge(selectedPatient.dateOfBirth)} | {selectedPatient.gender}</p>
                                             </div>
                                         </div>
                                         <button type="button" onClick={() => { setSearch(''); setShowDropdown(true); }} className="text-[13px] font-black text-blue-600 hover:underline">Change Patient</button>
