@@ -23,6 +23,9 @@ const RoomInventory = () => {
     const [roomStats, setRoomStats] = useState({});
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [newRoom, setNewRoom] = useState({ roomNumber: '', name: '', type: 'General Ward', floor: '1', capacity: 1 });
+    const [submitLoading, setSubmitLoading] = useState(false);
 
     const floors = [
         { name: 'All Floors', count: rooms.length },
@@ -52,6 +55,25 @@ const RoomInventory = () => {
         return floorMatch && searchMatch;
     });
 
+    const handleCreateRoom = async (e) => {
+        e.preventDefault();
+        setSubmitLoading(true);
+        try {
+            await roomAPI.create(newRoom);
+            setShowAddModal(false);
+            setNewRoom({ roomNumber: '', name: '', type: 'General Ward', floor: '1', capacity: 1 });
+            // Refresh data
+            const [roomRes, statsRes] = await Promise.all([roomAPI.getAll(), roomAPI.getStats()]);
+            setRooms(roomRes.data.data || []);
+            setRoomStats(statsRes.data.data || {});
+        } catch (err) {
+            console.error(err);
+            alert(err.response?.data?.message || 'Failed to create room');
+        } finally {
+            setSubmitLoading(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-[#f8f9fa] font-sans flex text-[#0f172a]">
             <AdminSidebar />
@@ -63,6 +85,8 @@ const RoomInventory = () => {
                         <Search className="absolute left-3 text-gray-400" size={18} />
                         <input
                             type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search rooms or patients..."
                             className="w-full bg-[#f4f7fb] border-none rounded-xl pl-10 pr-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-blue-100 transition-all"
                         />
@@ -188,13 +212,64 @@ const RoomInventory = () => {
                         ))}
 
                         {/* New Room Record Placeholder */}
-                        <div className="border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center p-8 text-center bg-gray-50/30 cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all min-h-[220px]">
+                        <div 
+                            onClick={() => setShowAddModal(true)}
+                            className="border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center p-8 text-center bg-gray-50/30 cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all min-h-[220px]">
                             <div className="w-12 h-12 rounded-full border-2 border-gray-200 flex items-center justify-center mb-4 text-gray-300">
                                 <Plus size={24} />
                             </div>
                             <p className="text-gray-400 font-bold text-[14px]">New Room Record</p>
                         </div>
                     </div>
+
+                    {showAddModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]/40 backdrop-blur-sm p-4">
+                            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 p-8">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xl font-black tracking-tight text-[#0f172a]">Add New Room</h3>
+                                    <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><span className="text-xl leading-none">&times;</span></button>
+                                </div>
+                                <form onSubmit={handleCreateRoom} className="space-y-4">
+                                    <div>
+                                        <label className="block text-[11px] font-black text-gray-400 mb-2 uppercase tracking-widest">Room Number *</label>
+                                        <input required type="text" value={newRoom.roomNumber} onChange={e => setNewRoom({...newRoom, roomNumber: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-blue-100 outline-none" placeholder="e.g. 101" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[11px] font-black text-gray-400 mb-2 uppercase tracking-widest">Room Name</label>
+                                        <input type="text" value={newRoom.name} onChange={e => setNewRoom({...newRoom, name: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-blue-100 outline-none" placeholder="e.g. General Ward 101" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-[11px] font-black text-gray-400 mb-2 uppercase tracking-widest">Type</label>
+                                            <select value={newRoom.type} onChange={e => setNewRoom({...newRoom, type: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-blue-100 outline-none">
+                                                <option>General Ward</option>
+                                                <option>Consultation</option>
+                                                <option>Private Suite</option>
+                                                <option>ICU</option>
+                                                <option>Emergency</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[11px] font-black text-gray-400 mb-2 uppercase tracking-widest">Floor</label>
+                                            <select value={newRoom.floor} onChange={e => setNewRoom({...newRoom, floor: e.target.value})} className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-blue-100 outline-none">
+                                                <option>1</option>
+                                                <option>2</option>
+                                                <option>3</option>
+                                                <option>4</option>
+                                                <option>Ground Floor</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-4 mt-8 pt-4">
+                                        <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 py-3.5 rounded-xl font-bold bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors">Cancel</button>
+                                        <button type="submit" disabled={submitLoading} className="flex-1 py-3.5 rounded-xl font-black bg-[#0a2540] text-white shadow-xl hover:shadow-2xl hover:bg-[#1a3a5a] transition-all disabled:opacity-50">
+                                            {submitLoading ? 'Creating...' : 'Create Room'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="mt-12 flex items-center justify-between text-[11px] font-bold text-gray-400 uppercase tracking-widest pb-10">
                         <div className="flex items-center gap-2">
