@@ -34,13 +34,12 @@ const appointmentSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Auto-generate ticket number
-appointmentSchema.pre('save', async function (next) {
+appointmentSchema.pre('save', async function () {
   if (!this.ticketNumber) {
     const prefix = this.specialization ? this.specialization.substring(0, 1).toUpperCase() : 'A';
     const count = await mongoose.model('Appointment').countDocuments();
     this.ticketNumber = `${prefix}-${String(count + 100).padStart(3, '0')}`;
   }
-  next();
 });
 
 module.exports = mongoose.model('Appointment', appointmentSchema);
