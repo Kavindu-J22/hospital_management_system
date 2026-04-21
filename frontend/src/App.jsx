@@ -21,6 +21,8 @@ import AdminDashboard from './pages/admin/Dashboard';
 import Doctors from './pages/admin/Doctors';
 import ScheduleAppointment from './pages/admin/ScheduleAppointment';
 import AdminPharmacyMap from './pages/admin/PharmacyMap';
+import AdminSessions from './pages/admin/Sessions';
+import AdminPrescriptions from './pages/admin/Prescriptions';
 
 // Doctor Pages
 import DoctorLogin from './pages/doctor/DoctorLogin';
@@ -58,8 +60,8 @@ function App() {
       <Route path="/admin/queue" element={<Queue />} />
       <Route path="/admin/new-patient" element={<NewPatient />} />
       <Route path="/admin/pharmacy" element={<AdminPharmacyMap />} />
-      <Route path="/admin/prescriptions" element={<DoctorPrescriptions />} />
-      <Route path="/admin/sessions" element={<DoctorSessions />} />
+      <Route path="/admin/prescriptions" element={<AdminPrescriptions />} />
+      <Route path="/admin/sessions" element={<AdminSessions />} />
       <Route path="/admin/new-session" element={<NewSession role="admin" />} />
       <Route path="/admin/rooms" element={<RoomInventory />} />
       <Route path="/admin/room-allocation" element={<RoomAllocation />} />
