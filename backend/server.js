@@ -63,26 +63,59 @@ cron.schedule('* * * * *', async () => {
   try {
     const now = new Date();
     const activeSessions = await Session.find({ status: { $in: ['Active', 'Upcoming', 'Extended'] } });
+    
+    if (activeSessions.length > 0) {
+      console.log(`[SessionCron] Checking ${activeSessions.length} sessions at ${now.toLocaleString()}`);
+    }
+
+    // Helper to parse "HH:mm AM/PM" or "HH:mm" into a Date object for a given base date
+    const parseSessionTime = (baseDate, timeStr) => {
+      const date = new Date(baseDate);
+      let hours = 0;
+      let minutes = 0;
+
+      if (timeStr.includes('AM') || timeStr.includes('PM')) {
+        const [time, modifier] = timeStr.split(' ');
+        let [h, m] = time.split(':');
+        hours = parseInt(h);
+        minutes = parseInt(m);
+        if (modifier === 'PM' && hours < 12) hours += 12;
+        if (modifier === 'AM' && hours === 12) hours = 0;
+      } else {
+        const [h, m] = timeStr.split(':');
+        hours = parseInt(h);
+        minutes = parseInt(m);
+      }
+      date.setHours(hours, minutes, 0, 0);
+      return date;
+    };
 
     for (const session of activeSessions) {
-      const sessionDate = new Date(session.date);
-      const endTimeParts = (session.extendedEndTime || session.endTime).split(':');
-      const sessionEnd = new Date(sessionDate);
-      sessionEnd.setHours(parseInt(endTimeParts[0]), parseInt(endTimeParts[1]), 0, 0);
+      const sessionDate = session.date;
+      const startTime = parseSessionTime(sessionDate, session.startTime);
+      const endTime = parseSessionTime(sessionDate, session.extendedEndTime || session.endTime);
 
-      if (now >= sessionEnd) {
-        session.status = 'Completed';
-        await session.save();
-        // Free up room
-        await Room.findByIdAndUpdate(session.room, { status: 'Available' });
-        // Doctor becomes Unavailable
-        await Doctor.findByIdAndUpdate(session.doctor, { availability: 'Unavailable' });
-        console.log(`⏰ Auto-completed session: ${session._id} (${session.doctorName})`);
-      } else if (now >= new Date(sessionDate.setHours(parseInt(session.startTime.split(':')[0]), parseInt(session.startTime.split(':')[1]), 0, 0))) {
+      if (now >= endTime) {
+        // SESSION COMPLETED
+        if (session.status !== 'Completed') {
+          session.status = 'Completed';
+          await session.save();
+          // Free up room
+          await Room.findByIdAndUpdate(session.room, { status: 'Available' });
+          // Doctor becomes Unavailable
+          await Doctor.findByIdAndUpdate(session.doctor, { availability: 'Unavailable' });
+          console.log(`⏰ Auto-completed session: ${session._id} (${session.doctorName})`);
+        }
+      } else if (now >= startTime) {
+        // SESSION ACTIVE
         if (session.status === 'Upcoming') {
           session.status = 'Active';
           await session.save();
+          // Doctor on Session
           await Doctor.findByIdAndUpdate(session.doctor, { availability: 'On Session' });
+          // Room becomes Occupied
+          await Room.findByIdAndUpdate(session.room, { status: 'Occupied' });
+          console.log(`🚀 Session started: ${session._id} (${session.doctorName}) - Room ${session.roomNumber} is now Occupied`);
         }
       }
     }

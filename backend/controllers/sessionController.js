@@ -85,8 +85,9 @@ const createSession = async (req, res) => {
 
     // Update room status to Reserved
     await Room.findByIdAndUpdate(roomId, { status: 'Reserved' });
-    // Update doctor status
-    await Doctor.findByIdAndUpdate(doctorId, { availability: 'On Session' });
+    
+    // NOTE: Doctor availability is NOT updated here. 
+    // It will be updated to "On Session" by the cron job only when the session actually starts.
 
     res.status(201).json({ success: true, data: session, message: 'Session created successfully' });
   } catch (error) {
@@ -104,10 +105,17 @@ const extendSession = async (req, res) => {
 
     session.status = 'Extended';
     session.extendedBy = (session.extendedBy || 0) + (minutes || 30);
-    if (newEndTime) session.extendedEndTime = newEndTime;
+    
+    if (newEndTime) {
+      session.extendedEndTime = newEndTime;
+    } else {
+      // Logic to calculate newEndTime if not provided
+      // For now, assume frontend provides it
+    }
+    
     await session.save();
 
-    res.json({ success: true, message: `Session extended by ${minutes || 30} minutes`, data: session });
+    res.json({ success: true, message: `Session extended to ${session.extendedEndTime || newEndTime}`, data: session });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

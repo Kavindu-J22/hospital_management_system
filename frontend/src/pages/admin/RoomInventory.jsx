@@ -24,6 +24,13 @@ const RoomInventory = () => {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
 
+    const floors = [
+        { name: 'All Floors', count: rooms.length },
+        { name: 'Floor 1', count: rooms.filter(r => r.floor === '1' || r.floor === 'Floor 1').length },
+        { name: 'Floor 2', count: rooms.filter(r => r.floor === '2' || r.floor === 'Floor 2').length },
+        { name: 'ICU / Emergency', count: rooms.filter(r => ['ICU', 'Emergency'].includes(r.type)).length },
+    ];
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -191,7 +198,7 @@ const RoomInventory = () => {
 
                     <div className="mt-12 flex items-center justify-between text-[11px] font-bold text-gray-400 uppercase tracking-widest pb-10">
                         <div className="flex items-center gap-2">
-                            <Clock size={14} /> Last updated: Oct 24, 2026 - 10:42 AM
+                            <Clock size={14} /> Last updated: {new Date().toLocaleString()}
                         </div>
                         <div className="flex gap-6">
                             <span className="hover:text-gray-600 cursor-pointer">Privacy Policy</span>

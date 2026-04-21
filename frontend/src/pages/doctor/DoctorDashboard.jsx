@@ -77,13 +77,22 @@ const DoctorDashboard = () => {
 
                     {/* Stats */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        {/* Session History (this week) */}
+                        <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                            <div className="flex justify-between items-start mb-6">
+                                <div className="bg-blue-50 text-blue-600 p-2.5 rounded-xl"><History size={20} /></div>
+                            </div>
+                            <div>
+                                <p className="text-[13px] font-bold text-gray-400 mb-1">Recent Consultations</p>
+                                <h3 className="text-[32px] font-black text-[#0f172a] leading-none tracking-tight">{loading ? '—' : completedSessions.length}</h3>
+                            </div>
+                        </div>
                         {/* Total Patients */}
                         <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
                             <div className="flex justify-between items-start mb-6">
                                 <div className="bg-blue-50 text-blue-600 p-2.5 rounded-xl">
                                     <User size={20} />
                                 </div>
-                                <span className="bg-green-50 text-green-700 text-[11px] font-bold px-2 py-1 rounded-full">+5.2%</span>
                             </div>
                             <div>
                                 <p className="text-[13px] font-bold text-gray-400 mb-1">Total Patients</p>
@@ -100,72 +109,53 @@ const DoctorDashboard = () => {
                                 <h3 className="text-[32px] font-black text-[#0f172a] leading-none tracking-tight">{loading ? '—' : mySessions.length}</h3>
                             </div>
                         </div>
-                        {/* Sessions Today */}
-                        <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
-                            <div className="flex justify-between items-start mb-6">
-                                <div className="bg-blue-50 text-blue-600 p-2.5 rounded-xl"><TrendingUp size={20} /></div>
-                            </div>
-                            <div>
-                                <p className="text-[13px] font-bold text-gray-400 mb-1">Completed Sessions</p>
-                                <h3 className="text-[32px] font-black text-[#0f172a] leading-none tracking-tight">{loading ? '—' : completedSessions.length}</h3>
-                            </div>
-                        </div>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
-
-                        {/* Active Sessions */}
-                        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-                            <div className="p-6 border-b border-gray-100">
-                                <h2 className="text-[18px] font-bold text-[#0f172a] tracking-tight">Active & Upcoming Sessions</h2>
-                            </div>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead>
-                                        <tr className="border-b border-gray-100 bg-gray-50/50">
-                                            <th className="py-4 px-6 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Session Date</th>
-                                            <th className="py-4 px-6 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Time Slot</th>
-                                            <th className="py-4 px-6 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Room No.</th>
-                                            <th className="py-4 px-6 text-[11px] font-bold text-gray-400 uppercase tracking-widest text-right">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {loading && <tr><td colSpan={4} className="py-6 text-center text-gray-400">Loading sessions...</td></tr>}
-                                        {!loading && mySessions.length === 0 && <tr><td colSpan={4} className="py-6 text-center text-gray-400">No upcoming sessions</td></tr>}
-                                        {mySessions.map((session) => (
-                                            <tr key={session._id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
-                                                <td className="py-5 px-6 font-bold text-[#0f172a] text-[13px]">{new Date(session.date).toLocaleDateString()}</td>
-                                                <td className="py-5 px-6 font-medium text-gray-500 text-[13px]">{session.startTime} - {session.endTime}</td>
-                                                <td className="py-5 px-6 font-medium text-gray-500 text-[13px]">{session.roomNumber}</td>
-                                                <td className="py-5 px-6 text-right">
-                                                    <span className="px-2 py-1 bg-yellow-50 text-yellow-700 text-xs font-bold rounded-full">{session.status}</span>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {/* Session History Sidebar */}
-                        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col p-6">
-                            <div className="flex items-center justify-between mb-8 border-b border-gray-100 pb-6">
-                                <h2 className="text-[18px] font-bold text-[#0f172a] tracking-tight">Session History</h2>
-                                <button className="text-blue-600 text-[13px] font-bold hover:underline">View All</button>
-                            </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1">
+                        {/* Upcoming Session List */}
+                        <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm">
+                            <h2 className="text-[18px] font-black mb-8 flex items-center gap-2.5">
+                                <Calendar size={20} className="text-blue-600" /> Next Sessions
+                            </h2>
                             <div className="space-y-6">
-                                {completedSessions.slice(0, 5).map((session) => (
-                                    <div key={session._id} className="flex gap-4">
-                                        <div className="w-10 h-10 rounded-xl bg-[#f0f4f8] flex items-center justify-center shrink-0 border border-gray-200">
-                                            <History size={18} className="text-[#0f172a]" />
+                                {!loading && mySessions.length === 0 && <p className="text-gray-400 font-medium italic py-10 text-center">No upcoming sessions scheduled.</p>}
+                                {mySessions.slice(0, 3).map((session, idx) => (
+                                    <div key={idx} className="flex gap-6 items-start group">
+                                        <div className="bg-[#f8f9fa] border border-gray-100 rounded-2xl p-4 flex flex-col items-center justify-center text-center w-20 shrink-0">
+                                            <p className="text-[10px] font-black text-gray-400 uppercase mb-0.5 leading-none">{new Date(session.date).toLocaleDateString(undefined, { month: 'short' })}</p>
+                                            <p className="text-[20px] font-black text-[#0f172a] leading-none">{new Date(session.date).getDate()}</p>
                                         </div>
-                                        <div className="pt-0.5">
-                                            <h4 className="font-bold text-[#0f172a] text-[14px] leading-tight mb-1">{session.specialization} Session</h4>
-                                            <p className="text-[12px] text-gray-500 font-medium leading-tight">{new Date(session.date).toLocaleDateString()} • {session.currentPatients || 0} Patients</p>
+                                        <div className="flex-1">
+                                            <h4 className="font-extrabold text-[#0f172a] text-[15px] mb-1">{session.specialization || 'Clinical'} Session</h4>
+                                            <div className="flex items-center gap-4 text-[12px] font-bold text-gray-400 uppercase tracking-wide">
+                                                <span className="flex items-center gap-1.5"><Clock size={13} className="text-blue-600" /> {session.startTime}</span>
+                                                <span className="flex items-center gap-1.5"><Bed size={13} className="text-blue-600" /> {session.roomNumber}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
-                                {!loading && completedSessions.length === 0 && <p className="text-gray-400 text-sm">No completed sessions yet</p>}
+                            </div>
+                        </div>
+
+                        {/* History & Records */}
+                        <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm">
+                            <h2 className="text-[18px] font-black mb-8 flex items-center gap-2.5">
+                                <History size={20} className="text-blue-600" /> History & Records
+                            </h2>
+                            <div className="space-y-6">
+                                {!loading && completedSessions.length === 0 && <p className="text-gray-400 font-medium italic py-10 text-center">No session history records found.</p>}
+                                {completedSessions.slice(0, 3).map((session, idx) => (
+                                    <div key={idx} className="flex gap-6 items-center">
+                                        <div className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0">
+                                            <Activity size={20} className="text-gray-400" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h4 className="font-extrabold text-[#0f172a] text-[15px] mb-0.5">{session.specialization || 'Clinical'} Summary</h4>
+                                            <p className="text-[12px] font-bold text-gray-400 uppercase tracking-tight">{new Date(session.date).toLocaleDateString()} • {session.currentPatients || 0} Patients</p>
+                                        </div>
+                                        <span className="text-green-600 font-bold text-[12px] uppercase">Completed</span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>

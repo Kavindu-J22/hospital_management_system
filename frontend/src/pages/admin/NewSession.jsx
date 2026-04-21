@@ -26,6 +26,9 @@ const NewSession = ({ role = 'doctor' }) => {
 
     const [doctors, setDoctors] = useState([]);
     const [availableRooms, setAvailableRooms] = useState([]);
+    
+    // Calendar state
+    const [currentMonth, setCurrentMonth] = useState(new Date());
 
     useEffect(() => {
         const fetchOptions = async () => {
@@ -43,13 +46,13 @@ const NewSession = ({ role = 'doctor' }) => {
 
     // Form state
     const [form, setForm] = useState({
-        doctor: '', room: '', capacity: '12',
-        startTime: '09:00', endTime: '17:00', autoIntervals: true
+        doctor: role === 'doctor' ? currentUser.id : '', 
+        room: '', capacity: '12',
+        startTime: '09:00 AM', endTime: '05:00 PM', autoIntervals: true
     });
     const [sessionType, setSessionType] = useState('In-Person');
     const [selectedSlots, setSelectedSlots] = useState(['09:00 AM']);
-    const [dateRange, setDateRange] = useState({ start: null, end: null });
-    const [selectingEnd, setSelectingEnd] = useState(false);
+    const [selectedDate, setSelectedDate] = useState(null); // Single date selection for now as per simple requirement
     const [errors, setErrors] = useState({});
     const [toast, setToast] = useState(null);
     const [submitting, setSubmitting] = useState(false);
@@ -66,23 +69,29 @@ const NewSession = ({ role = 'doctor' }) => {
         );
     };
 
-    const handleDateClick = (date, i) => {
-        if (i < 3) return; // muted days
-        if (!dateRange.start || (dateRange.start && dateRange.end)) {
-            setDateRange({ start: date, end: null });
-            setSelectingEnd(true);
-        } else {
-            const end = date >= dateRange.start ? date : dateRange.start;
-            const start = date >= dateRange.start ? dateRange.start : date;
-            setDateRange({ start, end });
-            setSelectingEnd(false);
+    // Correct month generation
+    const getDaysInMonth = (year, month) => {
+        const date = new Date(year, month, 1);
+        const days = [];
+        // Add prev month days to pad start
+        const startDay = date.getDay();
+        for (let i = startDay - 1; i >= 0; i--) {
+            days.push({ day: new Date(year, month, -i).getDate(), month: 'prev' });
         }
+        // Current month
+        while (date.getMonth() === month) {
+            days.push({ day: date.getDate(), month: 'current' });
+            date.setDate(date.getDate() + 1);
+        }
+        return days;
     };
 
-    const isInRange = (date, i) => {
-        if (i < 3 || !dateRange.start) return false;
-        if (!dateRange.end) return date === dateRange.start;
-        return date >= dateRange.start && date <= dateRange.end;
+    const days = getDaysInMonth(currentMonth.getFullYear(), currentMonth.getMonth());
+
+    const handleDateClick = (dayObj) => {
+        if (dayObj.month !== 'current') return;
+        const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), dayObj.day);
+        setSelectedDate(newDate);
     };
 
     const validate = () => {
@@ -93,7 +102,7 @@ const NewSession = ({ role = 'doctor' }) => {
         if (Number(form.capacity) > 100) e.capacity = 'Capacity cannot exceed 100';
         if (!form.startTime.trim()) e.startTime = 'Start time is required';
         if (!form.endTime.trim()) e.endTime = 'End time is required';
-        if (!dateRange.start) e.date = 'Please select at least one date';
+        if (!selectedDate) e.date = 'Please select a session date';
         if (selectedSlots.length === 0) e.slots = 'Select at least one time slot';
         return e;
     };
@@ -107,13 +116,10 @@ const NewSession = ({ role = 'doctor' }) => {
         }
         setSubmitting(true);
         try {
-            const sessionDate = dateRange.start
-                ? new Date(2026, 3, dateRange.start) // April 2026
-                : new Date();
             await sessionAPI.create({
                 doctorId: form.doctor,
                 roomId: form.room,
-                date: sessionDate.toISOString(),
+                date: selectedDate.toISOString(),
                 startTime: form.startTime,
                 endTime: form.endTime,
                 maxPatients: Number(form.capacity),
@@ -130,19 +136,17 @@ const NewSession = ({ role = 'doctor' }) => {
     };
 
     const handleReset = () => {
-        setForm({ doctor: '', room: '', capacity: '12', startTime: '09:00 AM', endTime: '05:00 PM', autoIntervals: true });
+        setForm({ doctor: role === 'doctor' ? currentUser.id : '', room: '', capacity: '12', startTime: '09:00 AM', endTime: '05:00 PM', autoIntervals: true });
         setSessionType('In-Person');
         setSelectedSlots(['09:00 AM']);
-        setDateRange({ start: null, end: null });
+        setSelectedDate(null);
         setErrors({});
         setToast({ type: 'success', message: 'Form reset successfully.' });
     };
 
-    const rangeLabel = dateRange.start
-        ? dateRange.end
-            ? `Oct ${dateRange.start}, 2023 — Oct ${dateRange.end}, 2023`
-            : `Oct ${dateRange.start}, 2023 (select end date)`
-        : 'No range selected';
+    const rangeLabel = selectedDate
+        ? selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        : 'No date selected';
 
     return (
         <div className="min-h-screen bg-[#f8f9fa] font-sans flex text-[#0f172a]">
@@ -280,6 +284,7 @@ const NewSession = ({ role = 'doctor' }) => {
                                             type="text"
                                             value={form.startTime}
                                             onChange={set('startTime')}
+                                            onFocus={(e) => e.target.select()}
                                             placeholder="e.g. 09:00 AM"
                                             className={`w-full bg-[#f8f9fa] border rounded-xl px-4 py-4 focus:outline-none focus:ring-2 font-bold text-sm ${errors.startTime ? 'border-red-300 focus:ring-red-100 bg-red-50/30' : 'border-gray-100 focus:ring-blue-100'}`}
                                         />
@@ -291,6 +296,7 @@ const NewSession = ({ role = 'doctor' }) => {
                                             type="text"
                                             value={form.endTime}
                                             onChange={set('endTime')}
+                                            onFocus={(e) => e.target.select()}
                                             placeholder="e.g. 05:00 PM"
                                             className={`w-full bg-[#f8f9fa] border rounded-xl px-4 py-4 focus:outline-none focus:ring-2 font-bold text-sm ${errors.endTime ? 'border-red-300 focus:ring-red-100 bg-red-50/30' : 'border-gray-100 focus:ring-blue-100'}`}
                                         />
@@ -345,33 +351,29 @@ const NewSession = ({ role = 'doctor' }) => {
                             </h2>
 
                             <div className="flex items-center justify-between mb-8">
-                                <button type="button" className="p-1 text-gray-400 hover:bg-gray-100 rounded-lg"><ChevronLeft size={20} /></button>
-                                <h3 className="font-black text-[16px]">October 2023</h3>
-                                <button type="button" className="p-1 text-gray-400 hover:bg-gray-100 rounded-lg"><ChevronRight size={20} /></button>
+                                <button type="button" onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))} className="p-1 text-gray-400 hover:bg-gray-100 rounded-lg"><ChevronLeft size={20} /></button>
+                                <h3 className="font-black text-[16px]">{currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h3>
+                                <button type="button" onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))} className="p-1 text-gray-400 hover:bg-gray-100 rounded-lg"><ChevronRight size={20} /></button>
                             </div>
 
                             <div className="grid grid-cols-7 gap-1 mb-8 text-center shrink-0">
                                 {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
                                     <span key={day} className="text-[10px] font-black text-gray-400 tracking-widest mb-4">{day}</span>
                                 ))}
-                                {CALENDAR_DAYS.map((date, i) => {
-                                    const isMuted = i < 3;
-                                    const inRange = isInRange(date, i);
-                                    const isStart = !isMuted && dateRange.start === date;
-                                    const isEnd = !isMuted && dateRange.end === date;
+                                {days.map((dayObj, i) => {
+                                    const isMuted = dayObj.month !== 'current';
+                                    const isSelected = !isMuted && selectedDate && selectedDate.getDate() === dayObj.day && selectedDate.getMonth() === currentMonth.getMonth() && selectedDate.getFullYear() === currentMonth.getFullYear();
                                     return (
                                         <button
                                             type="button"
                                             key={i}
-                                            onClick={() => handleDateClick(date, i)}
+                                            onClick={() => handleDateClick(dayObj)}
                                             className={`h-10 w-full flex items-center justify-center text-[13px] font-bold rounded-lg transition-colors
                                                 ${isMuted ? 'text-gray-200 cursor-default' : 'text-gray-700 hover:bg-blue-50 cursor-pointer'}
-                                                ${inRange && !isStart && !isEnd ? 'bg-blue-100 text-blue-700' : ''}
-                                                ${isStart ? 'bg-[#0a2540] text-white shadow-lg' : ''}
-                                                ${isEnd ? 'bg-blue-500 text-white shadow-md' : ''}
+                                                ${isSelected ? 'bg-[#0a2540] text-white shadow-lg' : ''}
                                             `}
                                         >
-                                            {date}
+                                            {dayObj.day}
                                         </button>
                                     );
                                 })}
@@ -383,10 +385,9 @@ const NewSession = ({ role = 'doctor' }) => {
                                 </p>
                             )}
 
-                            <div className={`rounded-2xl p-5 mb-8 ${dateRange.start ? 'bg-blue-50 border border-blue-100' : 'bg-[#f8f9fa]'}`}>
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 leading-tight">Range Selected</p>
+                            <div className={`rounded-2xl p-5 mb-8 ${selectedDate ? 'bg-blue-50 border border-blue-100' : 'bg-[#f8f9fa]'}`}>
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 leading-tight">Date Selected</p>
                                 <p className="text-[14px] font-bold leading-tight">{rangeLabel}</p>
-                                {selectingEnd && <p className="text-[11px] text-blue-500 font-bold mt-1">Now click an end date...</p>}
                             </div>
 
                             <div className="space-y-4 mt-auto">
