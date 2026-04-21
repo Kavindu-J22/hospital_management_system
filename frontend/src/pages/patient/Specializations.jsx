@@ -7,6 +7,8 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { doctorAPI, sessionAPI } from '../../services/api';
 
+import PatientSidebar from '../../components/patient/PatientSidebar';
+
 const specIcon = (name) => {
     const n = name?.toLowerCase() || '';
     if (n.includes('cardio')) return { icon: <HeartPulse className="text-red-500" size={24} />, bg: 'bg-red-50' };
@@ -63,116 +65,129 @@ const Specializations = () => {
     const handleBook = (specName) => navigate('/book-appointment', { state: { specialization: specName } });
 
     return (
-        <div className="min-h-screen bg-[#f8f9fa] font-sans pb-16">
-            {/* Header */}
-            <header className="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-between shadow-sm sticky top-0 z-10">
-                <div className="flex items-center gap-3">
-                    <div className="bg-blue-50 text-blue-600 p-2 rounded-lg">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
-                    </div>
-                    <span className="text-xl font-bold text-[#0f172a] uppercase tracking-wide">Behealthy Portal</span>
-                </div>
-                <div className="flex items-center gap-4">
-                    <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors relative">
-                        <Bell size={20} />
-                        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-                    </button>
-                    <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors bg-gray-50">
-                        <User size={20} />
-                    </button>
-                </div>
-            </header>
+        <div className="min-h-screen bg-[#f8f9fa] flex font-sans">
+            <PatientSidebar />
 
-            {/* Main Content */}
-            <main className="max-w-6xl mx-auto px-4 mt-12">
-                <div className="mb-10">
-                    <h1 className="text-4xl font-extrabold text-[#0f172a] mb-2 tracking-tight">Medical Specializations</h1>
-                    <p className="text-gray-500 text-lg">Find and book appointments with our world-class specialists</p>
-                </div>
-
-                {/* Filters */}
-                <div className="flex flex-col md:flex-row items-center gap-4 mb-10">
-                    <div className="flex-1 w-full relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <div className="flex-1 ml-64">
+                {/* Topbar */}
+                <header className="bg-white px-8 py-5 border-b border-gray-100 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+                    <div className="w-[400px] relative">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                         <input
                             type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Search specializations (e.g. Cardiology, Neuro...)"
-                            className="w-full bg-white border border-gray-200 rounded-xl pl-12 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                            placeholder="Search records, doctors..."
+                            className="w-full bg-[#f8f9fa] border border-transparent rounded-xl pl-11 pr-4 py-2.5 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm"
                         />
                     </div>
-                    <div className="flex items-center gap-3 w-full md:w-auto">
-                        <button className="bg-[#0f172a] text-white px-6 py-3.5 rounded-xl font-medium shadow-sm hover:bg-slate-800 transition-colors">
-                            All
-                        </button>
-                        <button className="bg-white text-gray-700 px-6 py-3.5 rounded-xl font-medium border border-gray-200 shadow-sm hover:bg-gray-50 flex items-center gap-2 transition-colors">
-                            <Star size={18} /> Top Rated
-                        </button>
-                        <button className="bg-white text-gray-700 px-6 py-3.5 rounded-xl font-medium border border-gray-200 shadow-sm hover:bg-gray-50 flex items-center gap-2 transition-colors">
-                            <Calendar size={18} /> Available Today
-                        </button>
-                    </div>
-                </div>
 
-                {/* Cards Grid */}
-                {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[...Array(6)].map((_, i) => <div key={i} className="bg-white rounded-2xl p-6 h-52 animate-pulse border border-gray-100" />)}
-                    </div>
-                ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {specializations.filter(s => !search || s.toLowerCase().includes(search.toLowerCase())).map((specName) => {
-                        const { icon, bg } = specIcon(specName);
-                        const count = doctorCounts[specName] || 0;
-                        return (
-                            <div key={specName} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col h-full">
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className={`p-4 rounded-xl ${bg}`}>{icon}</div>
-                                    <span className={`text-xs font-bold px-3 py-1.5 rounded-md ${count > 0 ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                                        {count > 0 ? 'AVAILABLE' : 'CALL FOR INFO'}
-                                    </span>
-                                </div>
-                                <h3 className="text-xl font-bold text-[#0f172a] mb-2">{specName}</h3>
-                                <p className="text-gray-500 text-sm mb-6 flex-1 line-clamp-2">{specDesc(specName)}</p>
-                                <div className="flex items-center gap-2 text-sm text-gray-500 font-medium mb-6">
-                                    <Users size={16} />
-                                    {count} Specialist{count !== 1 ? 's' : ''} Available
-                                </div>
-                                <button
-                                    onClick={() => handleBook(specName)}
-                                    className="w-full bg-[#f4f6fa] hover:bg-[#e2e8f0] text-[#0f172a] font-semibold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-colors"
-                                >
-                                    Book an appointment <CalendarPlus size={18} />
-                                </button>
+                    <div className="flex items-center gap-6">
+                        <button className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors relative">
+                            <Bell size={20} />
+                            <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                        </button>
+
+                        <div className="flex items-center gap-3 pl-6 border-l border-gray-100 cursor-pointer">
+                            <div className="text-right">
+                                <p className="font-bold text-gray-900 text-sm">{user?.fullName || 'Patient'}</p>
+                                <p className="text-xs text-gray-500 font-medium">Patient ID: #{user?.patientId || '—'}</p>
                             </div>
-                        );
-                    })}
-                    {specializations.filter(s => !search || s.toLowerCase().includes(search.toLowerCase())).length === 0 && (
-                        <div className="col-span-3 py-12 text-center text-gray-400 font-medium">No specializations found</div>
+                            <div className="w-10 h-10 bg-amber-100 rounded-full overflow-hidden border border-amber-200">
+                                <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${user?.fullName}&backgroundColor=fef3c7`} alt={user?.fullName} className="w-full h-full object-cover" />
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                {/* Main Content */}
+                <main className="p-8 max-w-[1200px] mx-auto">
+                    <div className="mb-10">
+                        <h1 className="text-4xl font-extrabold text-[#0f172a] mb-2 tracking-tight">Medical Specializations</h1>
+                        <p className="text-gray-500 text-lg">Find and book appointments with our world-class specialists</p>
+                    </div>
+
+                    {/* Filters */}
+                    <div className="flex flex-col md:flex-row items-center gap-4 mb-10">
+                        <div className="flex-1 w-full relative">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Search specializations (e.g. Cardiology, Neuro...)"
+                                className="w-full bg-white border border-gray-200 rounded-xl pl-12 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                            />
+                        </div>
+                        <div className="flex items-center gap-3 w-full md:w-auto">
+                            <button className="bg-[#0f172a] text-white px-6 py-3.5 rounded-xl font-medium shadow-sm hover:bg-slate-800 transition-colors">
+                                All
+                            </button>
+                            <button className="bg-white text-gray-700 px-6 py-3.5 rounded-xl font-medium border border-gray-200 shadow-sm hover:bg-gray-50 flex items-center gap-2 transition-colors">
+                                <Star size={18} /> Top Rated
+                            </button>
+                            <button className="bg-white text-gray-700 px-6 py-3.5 rounded-xl font-medium border border-gray-200 shadow-sm hover:bg-gray-50 flex items-center gap-2 transition-colors">
+                                <Calendar size={18} /> Available Today
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Cards Grid */}
+                    {loading ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {[...Array(6)].map((_, i) => <div key={i} className="bg-white rounded-2xl p-6 h-52 animate-pulse border border-gray-100" />)}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {specializations.filter(s => !search || s.toLowerCase().includes(search.toLowerCase())).map((specName) => {
+                                const { icon, bg } = specIcon(specName);
+                                const count = doctorCounts[specName] || 0;
+                                return (
+                                    <div key={specName} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col h-full">
+                                        <div className="flex justify-between items-start mb-6">
+                                            <div className={`p-4 rounded-xl ${bg}`}>{icon}</div>
+                                            <span className={`text-xs font-bold px-3 py-1.5 rounded-md ${count > 0 ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                                {count > 0 ? 'AVAILABLE' : 'CALL FOR INFO'}
+                                            </span>
+                                        </div>
+                                        <h3 className="text-xl font-bold text-[#0f172a] mb-2">{specName}</h3>
+                                        <p className="text-gray-500 text-sm mb-6 flex-1 line-clamp-2">{specDesc(specName)}</p>
+                                        <div className="flex items-center gap-2 text-sm text-gray-500 font-medium mb-6">
+                                            <Users size={16} />
+                                            {count} Specialist{count !== 1 ? 's' : ''} Available
+                                        </div>
+                                        <button
+                                            onClick={() => handleBook(specName)}
+                                            className="w-full bg-[#f4f6fa] hover:bg-[#e2e8f0] text-[#0f172a] font-semibold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-colors"
+                                        >
+                                            Book an appointment <CalendarPlus size={18} />
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                            {specializations.filter(s => !search || s.toLowerCase().includes(search.toLowerCase())).length === 0 && (
+                                <div className="col-span-3 py-12 text-center text-gray-400 font-medium">No specializations found</div>
+                            )}
+                        </div>
                     )}
-                </div>
-                )}
 
-                {/* Bottom Banner */}
-                <div className="mt-16 bg-[#f3f4f6] rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between border border-gray-200">
-                    <div className="mb-6 md:mb-0 max-w-lg">
-                        <h3 className="text-xl font-bold text-[#0f172a] mb-2">Can't find what you're looking for?</h3>
-                        <p className="text-gray-500">
-                            Our 24/7 help desk can assist you with general inquiries or guide you to the right department.
-                        </p>
+                    {/* Bottom Banner */}
+                    <div className="mt-16 bg-[#f3f4f6] rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between border border-gray-200">
+                        <div className="mb-6 md:mb-0 max-w-lg">
+                            <h3 className="text-xl font-bold text-[#0f172a] mb-2">Can't find what you're looking for?</h3>
+                            <p className="text-gray-500">
+                                Our 24/7 help desk can assist you with general inquiries or guide you to the right department.
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-4 w-full md:w-auto">
+                            <button className="flex-1 md:flex-none bg-white font-semibold text-[#0f172a] px-6 py-3.5 rounded-xl border border-gray-300 hover:bg-gray-50 transition-colors">
+                                Chat with Support
+                            </button>
+                            <button className="flex-1 md:flex-none bg-red-600 font-semibold text-white px-6 py-3.5 rounded-xl hover:bg-red-700 transition-colors shadow-sm shadow-red-500/30">
+                                Call Emergency
+                            </button>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-4 w-full md:w-auto">
-                        <button className="flex-1 md:flex-none bg-white font-semibold text-[#0f172a] px-6 py-3.5 rounded-xl border border-gray-300 hover:bg-gray-50 transition-colors">
-                            Chat with Support
-                        </button>
-                        <button className="flex-1 md:flex-none bg-red-600 font-semibold text-white px-6 py-3.5 rounded-xl hover:bg-red-700 transition-colors shadow-sm shadow-red-500/30">
-                            Call Emergency
-                        </button>
-                    </div>
-                </div>
-
-            </main>
+                </main>
+            </div>
         </div>
     );
 };

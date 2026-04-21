@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
     LayoutDashboard, Calendar, FileStack, 
-    CreditCard, Store, LogOut, AlertTriangle 
+    CreditCard, Store, LogOut, AlertTriangle, Stethoscope
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -41,6 +41,10 @@ const PatientSidebar = () => {
                     <button onClick={() => navigate('/dashboard')} className={navItemClass('/dashboard')}>
                         <LayoutDashboard size={20} />
                         Dashboard
+                    </button>
+                    <button onClick={() => navigate('/specializations')} className={navItemClass('/specializations')}>
+                        <Stethoscope size={20} />
+                        Specializations
                     </button>
                     <button onClick={() => navigate('/book-appointment')} className={navItemClass('/book-appointment')}>
                         <Calendar size={20} />
