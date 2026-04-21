@@ -16,6 +16,7 @@ const Dashboard = () => {
     const [appointments, setAppointments] = useState([]);
     const [prescriptions, setPrescriptions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [queueData, setQueueData] = useState({ ahead: 0, waitTime: 0, total: 0 });
 
     useEffect(() => {
         const fetchData = async () => {
@@ -25,15 +26,38 @@ const Dashboard = () => {
                     appointmentAPI.getAll({ patientId: user.id }),
                     prescriptionAPI.getByPatient(user.id),
                 ]);
-                setAppointments(apptRes.data.data || []);
+                
+                const appts = apptRes.data.data || [];
+                setAppointments(appts);
                 setPrescriptions(prescRes.data.data || []);
-            } catch (err) { console.error(err); }
+
+                // Find next appointment and fetch queue status
+                const upcomingAppts = appts.filter(a => ['Pending', 'Confirmed'].includes(a.status))
+                    .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate));
+                
+                const next = upcomingAppts[0];
+                if (next && next.session) {
+                    const sessionId = typeof next.session === 'object' ? next.session._id : next.session;
+                    const queueRes = await appointmentAPI.getSessionQueue(sessionId);
+                    const queue = queueRes.data.data || [];
+                    const myIndex = queue.findIndex(a => a._id === next._id);
+                    
+                    if (myIndex !== -1) {
+                        setQueueData({
+                            ahead: myIndex,
+                            waitTime: myIndex * 10, // Assuming 10 mins per patient
+                            total: queue.length
+                        });
+                    }
+                }
+            } catch (err) { console.error('Dashboard Error:', err); }
             finally { setLoading(false); }
         };
         fetchData();
     }, []);
 
-    const upcoming = appointments.filter(a => ['Pending','Confirmed'].includes(a.status));
+    const upcoming = appointments.filter(a => ['Pending', 'Confirmed'].includes(a.status))
+        .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate));
     const nextAppt = upcoming[0];
 
     return (
@@ -172,36 +196,45 @@ const Dashboard = () => {
                             </div>
 
                             <div className="bg-[#1e293b] rounded-2xl p-6 text-white mb-8 shadow-md relative overflow-hidden">
-                                <div className="absolute -right-6 -top-6 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>
-                                <div className="flex justify-between items-start mb-6 relative z-10">
-                                    <div>
-                                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Your Ticket</p>
-                                        <h3 className="text-4xl font-black tracking-tight">#A-124</h3>
-                                    </div>
-                                    <div className="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
-                                        <ScanLine size={24} className="text-white/80" />
-                                    </div>
-                                </div>
+                                 <div className="absolute -right-6 -top-6 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>
+                                 <div className="flex justify-between items-start mb-6 relative z-10">
+                                     <div>
+                                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Your Ticket</p>
+                                         <h3 className="text-4xl font-black tracking-tight">{nextAppt ? nextAppt.ticketNumber : 'No Ticket'}</h3>
+                                     </div>
+                                     <div className="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
+                                         <ScanLine size={24} className="text-white/80" />
+                                     </div>
+                                 </div>
 
-                                <div className="relative z-10">
-                                    <div className="flex justify-between items-end mb-2">
-                                        <p className="text-slate-400 text-sm font-medium">Current Status</p>
-                                        <p className="font-bold text-lg">2 people ahead</p>
-                                    </div>
-                                    <div className="h-2 bg-slate-700 rounded-full mb-6 overflow-hidden">
-                                        <div className="h-full bg-blue-500 w-[70%] rounded-full relative">
-                                            <div className="absolute right-0 top-0 bottom-0 w-8 bg-white/20"></div>
-                                        </div>
-                                    </div>
+                                 {nextAppt ? (
+                                     <div className="relative z-10">
+                                         <div className="flex justify-between items-end mb-2">
+                                             <p className="text-slate-400 text-sm font-medium">Current Status</p>
+                                             <p className="font-bold text-lg">{queueData.ahead} people ahead</p>
+                                         </div>
+                                         <div className="h-2 bg-slate-700 rounded-full mb-6 overflow-hidden">
+                                             <div 
+                                                 className="h-full bg-blue-500 rounded-full relative transition-all duration-500" 
+                                                 style={{ width: `${Math.max(10, 100 - (queueData.ahead * 20))}%` }}
+                                             >
+                                                 <div className="absolute right-0 top-0 bottom-0 w-8 bg-white/20"></div>
+                                             </div>
+                                         </div>
 
-                                    <div className="bg-slate-800/60 backdrop-blur-md rounded-xl p-3 flex justify-between items-center border border-slate-700">
-                                        <div className="flex items-center gap-2 text-slate-300 font-medium text-sm">
-                                            <Clock size={16} />
-                                            Estimated wait
-                                        </div>
-                                        <span className="font-bold">~12 mins</span>
-                                    </div>
-                                </div>
+                                         <div className="bg-slate-800/60 backdrop-blur-md rounded-xl p-3 flex justify-between items-center border border-slate-700">
+                                             <div className="flex items-center gap-2 text-slate-300 font-medium text-sm">
+                                                 <Clock size={16} />
+                                                 Estimated wait
+                                             </div>
+                                             <span className="font-bold">~{queueData.waitTime} mins</span>
+                                         </div>
+                                     </div>
+                                 ) : (
+                                     <div className="relative z-10 py-4 text-center">
+                                         <p className="text-slate-400 text-sm italic">No active queue for upcoming appointments</p>
+                                     </div>
+                                 )}
                             </div>
 
 
