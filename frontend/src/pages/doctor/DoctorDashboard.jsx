@@ -1,0 +1,194 @@
+import React, { useEffect, useState } from 'react';
+import {
+    Bell, Plus, User, Calendar, TrendingUp, History, Activity
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import DoctorSidebar from '../../components/doctor/DoctorSidebar';
+import { sessionAPI, appointmentAPI } from '../../services/api';
+
+const DoctorDashboard = () => {
+    const navigate = useNavigate();
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const [mySessions, setMySessions] = useState([]);
+    const [completedSessions, setCompletedSessions] = useState([]);
+    const [sessionStats, setSessionStats] = useState({});
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!user?.id) return;
+            try {
+                const [upRes, compRes, statsRes] = await Promise.all([
+                    sessionAPI.getByDoctor(user.id, { status: 'Upcoming' }),
+                    sessionAPI.getByDoctor(user.id, { status: 'Completed' }),
+                    sessionAPI.getStats(),
+                ]);
+                setMySessions(upRes.data.data || []);
+                setCompletedSessions(compRes.data.data || []);
+                setSessionStats(statsRes.data.data || {});
+            } catch (err) { console.error(err); }
+            finally { setLoading(false); }
+        };
+        fetchData();
+    }, []);
+
+    return (
+        <div className="min-h-screen bg-[#f4f7fb] font-sans flex">
+
+            {/* Sidebar */}
+            <DoctorSidebar />
+
+            {/* Main Content Area */}
+            <div className="flex-1 ml-[280px] flex flex-col min-h-screen">
+
+                {/* Topbar */}
+                <header className="bg-white px-8 py-4 flex items-center justify-between border-b border-gray-100 z-10 shrink-0">
+                    <div className="flex items-center gap-3">
+                        <Activity className="text-gray-400" size={24} />
+                        <h2 className="text-[16px] font-bold text-[#0f172a]">Welcome, {user?.fullName || 'Doctor'}</h2>
+                    </div>
+                    <div className="flex items-center gap-6">
+                        <button className="text-gray-400 hover:text-gray-600 transition-colors relative"><Bell size={20} /></button>
+                        <div className="w-px h-6 bg-gray-200"></div>
+                        <div className="flex items-center gap-3 cursor-pointer group">
+                            <div className="text-right">
+                                <p className="text-[14px] font-bold text-[#0f172a] leading-tight group-hover:text-blue-600 transition-colors">{user?.fullName}</p>
+                                <p className="text-[11px] text-gray-400 font-semibold tracking-wide">{user?.specialization}</p>
+                            </div>
+                            <div className="w-10 h-10 bg-teal-50 rounded-full border-2 border-white shadow-sm overflow-hidden">
+                                <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${user?.fullName}&backgroundColor=bbf7d0`} alt="Avatar" className="w-full h-full object-cover" />
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <main className="p-8 max-w-[1300px] w-full mx-auto flex-1 flex flex-col">
+
+                    {/* Page Header */}
+                    <div className="flex items-start justify-between mb-8">
+                        <div>
+                            <h1 className="text-[28px] font-black text-[#0f172a] mb-1 tracking-tight">Dashboard Overview</h1>
+                            <p className="text-gray-500 font-medium text-[15px]">Here is what's happening with your practice today.</p>
+                        </div>
+                        <button className="bg-[#0c3812] hover:bg-[#1a4a22] text-white px-6 py-3.5 rounded-xl font-bold transition-colors flex items-center gap-2 shadow-sm text-[14px]">
+                            <Plus size={18} /> Create New Session
+                        </button>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        {/* Total Patients */}
+                        <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                            <div className="flex justify-between items-start mb-6">
+                                <div className="bg-blue-50 text-blue-600 p-2.5 rounded-xl">
+                                    <User size={20} />
+                                </div>
+                                <span className="bg-green-50 text-green-700 text-[11px] font-bold px-2 py-1 rounded-full">+5.2%</span>
+                            </div>
+                            <div>
+                                <p className="text-[13px] font-bold text-gray-400 mb-1">Total Patients</p>
+                                <h3 className="text-[32px] font-black text-[#0f172a] leading-none tracking-tight">{loading ? '—' : mySessions.reduce((a, s) => a + (s.currentPatients || 0), 0)}</h3>
+                            </div>
+                        </div>
+                        {/* Upcoming Sessions */}
+                        <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                            <div className="flex justify-between items-start mb-6">
+                                <div className="bg-blue-50 text-blue-600 p-2.5 rounded-xl"><Calendar size={20} /></div>
+                            </div>
+                            <div>
+                                <p className="text-[13px] font-bold text-gray-400 mb-1">Upcoming Sessions</p>
+                                <h3 className="text-[32px] font-black text-[#0f172a] leading-none tracking-tight">{loading ? '—' : mySessions.length}</h3>
+                            </div>
+                        </div>
+                        {/* Sessions Today */}
+                        <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                            <div className="flex justify-between items-start mb-6">
+                                <div className="bg-blue-50 text-blue-600 p-2.5 rounded-xl"><TrendingUp size={20} /></div>
+                            </div>
+                            <div>
+                                <p className="text-[13px] font-bold text-gray-400 mb-1">Completed Sessions</p>
+                                <h3 className="text-[32px] font-black text-[#0f172a] leading-none tracking-tight">{loading ? '—' : completedSessions.length}</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
+
+                        {/* Active Sessions */}
+                        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+                            <div className="p-6 border-b border-gray-100">
+                                <h2 className="text-[18px] font-bold text-[#0f172a] tracking-tight">Active & Upcoming Sessions</h2>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead>
+                                        <tr className="border-b border-gray-100 bg-gray-50/50">
+                                            <th className="py-4 px-6 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Session Date</th>
+                                            <th className="py-4 px-6 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Time Slot</th>
+                                            <th className="py-4 px-6 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Room No.</th>
+                                            <th className="py-4 px-6 text-[11px] font-bold text-gray-400 uppercase tracking-widest text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {loading && <tr><td colSpan={4} className="py-6 text-center text-gray-400">Loading sessions...</td></tr>}
+                                        {!loading && mySessions.length === 0 && <tr><td colSpan={4} className="py-6 text-center text-gray-400">No upcoming sessions</td></tr>}
+                                        {mySessions.map((session) => (
+                                            <tr key={session._id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors">
+                                                <td className="py-5 px-6 font-bold text-[#0f172a] text-[13px]">{new Date(session.date).toLocaleDateString()}</td>
+                                                <td className="py-5 px-6 font-medium text-gray-500 text-[13px]">{session.startTime} - {session.endTime}</td>
+                                                <td className="py-5 px-6 font-medium text-gray-500 text-[13px]">{session.roomNumber}</td>
+                                                <td className="py-5 px-6 text-right">
+                                                    <span className="px-2 py-1 bg-yellow-50 text-yellow-700 text-xs font-bold rounded-full">{session.status}</span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Session History Sidebar */}
+                        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col p-6">
+                            <div className="flex items-center justify-between mb-8 border-b border-gray-100 pb-6">
+                                <h2 className="text-[18px] font-bold text-[#0f172a] tracking-tight">Session History</h2>
+                                <button className="text-blue-600 text-[13px] font-bold hover:underline">View All</button>
+                            </div>
+                            <div className="space-y-6">
+                                {completedSessions.slice(0, 5).map((session) => (
+                                    <div key={session._id} className="flex gap-4">
+                                        <div className="w-10 h-10 rounded-xl bg-[#f0f4f8] flex items-center justify-center shrink-0 border border-gray-200">
+                                            <History size={18} className="text-[#0f172a]" />
+                                        </div>
+                                        <div className="pt-0.5">
+                                            <h4 className="font-bold text-[#0f172a] text-[14px] leading-tight mb-1">{session.specialization} Session</h4>
+                                            <p className="text-[12px] text-gray-500 font-medium leading-tight">{new Date(session.date).toLocaleDateString()} • {session.currentPatients || 0} Patients</p>
+                                        </div>
+                                    </div>
+                                ))}
+                                {!loading && completedSessions.length === 0 && <p className="text-gray-400 text-sm">No completed sessions yet</p>}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer embedded in Doctor Portal */}
+                    <div className="mt-16 border-t border-gray-200 pt-8 pb-4 flex flex-col md:flex-row justify-between text-sm text-gray-500 max-w-[1300px]">
+                        <div className="space-y-3 mb-6 md:mb-0">
+                            <h3 className="text-[20px] font-bold text-[#0f172a]">Contact us</h3>
+                            <div className="space-y-4 pt-2">
+                                <p className="font-medium"><span className="w-24 inline-block">Email</span> info@behealthy.com</p>
+                                <p className="font-medium"><span className="w-24 inline-block">Number</span> +94 11 029 4203</p>
+                                <p className="font-medium"><span className="w-24 inline-block">Fax</span> 123456657768</p>
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-end justify-end mt-12 md:mt-0 pt-8 w-full md:w-auto">
+                            <span className="font-extrabold text-[#0f172a] text-2xl mb-1 tracking-tight">#Behealthy</span>
+                        </div>
+                    </div>
+
+                </main>
+            </div>
+        </div>
+    );
+};
+
+export default DoctorDashboard;
