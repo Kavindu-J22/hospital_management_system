@@ -44,13 +44,21 @@ const Doctors = () => {
     }, [statusFilter]);
 
     const handleApprove = async (id, name) => {
-        if (!window.confirm(`Are you sure you want to approve Dr. ${name}?`)) return;
+        // Removing window.confirm for now to ensure it works in all environments
+        console.log(`Attempting to approve doctor: ${name} (${id})`);
         
         try {
-            await doctorAPI.approve(id);
-            toast.success(`Dr. ${name} has been approved!`);
+            const res = await doctorAPI.approve(id);
+            console.log('Approval response:', res.data);
+            
+            if (res.data.emailSent) {
+                toast.success(res.data.message || `Dr. ${name} approved and email sent!`);
+            } else {
+                toast.success(res.data.message || `Dr. ${name} approved, but email failed.`);
+            }
             fetchDoctors();
         } catch (err) {
+            console.error('Approval click error:', err);
             toast.error(err.response?.data?.message || 'Approval failed');
         }
     };
@@ -60,8 +68,12 @@ const Doctors = () => {
         if (reason === null) return;
         
         try {
-            await doctorAPI.reject(id, { reason });
-            toast.success(`Dr. ${name} has been rejected.`);
+            const res = await doctorAPI.reject(id, { reason });
+            if (res.data.emailSent) {
+                toast.success(res.data.message || `Dr. ${name} rejected and email sent.`);
+            } else {
+                toast.success(res.data.message || `Dr. ${name} rejected, but email failed.`);
+            }
             fetchDoctors();
         } catch (err) {
             toast.error(err.response?.data?.message || 'Rejection failed');

@@ -38,7 +38,15 @@ const protect = async (req, res, next) => {
 
 const authorize = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
+    if (!req.user || !req.user.role) {
+      return res.status(401).json({ success: false, message: 'User role not found' });
+    }
+    
+    const userRole = req.user.role.toLowerCase();
+    const authorizedRoles = roles.map(r => r.toLowerCase());
+
+    if (!authorizedRoles.includes(userRole)) {
+      console.log(`🚫 Access denied for role: ${req.user.role}. Required: ${roles.join(', ')}`);
       return res.status(403).json({
         success: false,
         message: `Access denied. Role '${req.user.role}' is not authorized for this action.`

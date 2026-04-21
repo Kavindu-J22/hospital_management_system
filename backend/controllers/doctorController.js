@@ -48,23 +48,29 @@ const approveDoctor = async (req, res) => {
   try {
     const doctor = await Doctor.findById(req.params.id);
     if (!doctor) return res.status(404).json({ success: false, message: 'Doctor not found' });
-    if (doctor.status === 'Approved') return res.status(400).json({ success: false, message: 'Doctor is already approved' });
+    if (doctor.status === 'Approved') return res.status(400).json({ success: false, message: 'Doctor already approved' });
 
     doctor.status = 'Approved';
     doctor.availability = 'Available';
-    doctor.approvedBy = req.user.id;
+    doctor.approvedBy = req.user?.id;
     doctor.approvedAt = new Date();
     await doctor.save();
 
-    // Send approval email
+    console.log(`✅ Doctor ${doctor.fullName} approved in DB. Attempting email...`);
+
+    // Send approval email — we wait for it but handle the result
     const emailResult = await sendDoctorApprovalEmail(doctor);
+    
     res.json({
       success: true,
-      message: `Doctor ${doctor.fullName} has been approved`,
       emailSent: emailResult.success,
+      message: emailResult.success 
+        ? `Doctor ${doctor.fullName} approved and email sent successfully!` 
+        : `Doctor ${doctor.fullName} approved successfully, but email notification failed.`,
       data: { id: doctor._id, fullName: doctor.fullName, status: doctor.status }
     });
   } catch (error) {
+    console.error('❌ Approval error:', error.message);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -80,14 +86,20 @@ const rejectDoctor = async (req, res) => {
     doctor.rejectionReason = reason || '';
     await doctor.save();
 
+    console.log(`❌ Doctor ${doctor.fullName} rejected in DB. Attempting email...`);
+
     const emailResult = await sendDoctorRejectionEmail(doctor, reason);
+    
     res.json({
       success: true,
-      message: `Doctor ${doctor.fullName} has been rejected`,
       emailSent: emailResult.success,
+      message: emailResult.success
+        ? `Doctor ${doctor.fullName} rejected and email sent successfully.`
+        : `Doctor ${doctor.fullName} rejected successfully, but email notification failed.`,
       data: { id: doctor._id, fullName: doctor.fullName, status: doctor.status }
     });
   } catch (error) {
+    console.error('❌ Rejection error:', error.message);
     res.status(500).json({ success: false, message: error.message });
   }
 };
