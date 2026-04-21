@@ -6,6 +6,7 @@ import Specializations from './pages/patient/Specializations';
 import Dashboard from './pages/patient/Dashboard';
 import Pharmacy from './pages/patient/Pharmacy';
 import Billing from './pages/patient/Billing';
+import BookAppointment from './pages/patient/BookAppointment';
 
 // Admin Pages
 import AdminLogin from './pages/admin/Login';
@@ -35,6 +36,7 @@ function App() {
       <Route path="/patient" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/specializations" element={<Specializations />} />
+      <Route path="/book-appointment" element={<BookAppointment />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/pharmacy" element={<Pharmacy />} />
       <Route path="/billing" element={<Billing />} />

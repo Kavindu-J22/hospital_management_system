@@ -60,7 +60,7 @@ const Specializations = () => {
         fetchData();
     }, []);
 
-    const handleBook = (specName) => navigate('/dashboard', { state: { specialization: specName } });
+    const handleBook = (specName) => navigate('/book-appointment', { state: { specialization: specName } });
 
     return (
         <div className="min-h-screen bg-[#f8f9fa] font-sans pb-16">
