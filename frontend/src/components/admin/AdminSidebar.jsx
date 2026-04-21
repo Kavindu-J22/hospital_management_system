@@ -99,7 +99,10 @@ const AdminSidebar = () => {
         >
           <Bed size={20} className={iconClass("/admin/rooms")} /> Rooms
         </button>
-        <button className={navItemClass("/admin/doctors")}>
+        <button 
+          onClick={() => navigate("/admin/doctors")}
+          className={navItemClass("/admin/doctors")}
+        >
           <Activity size={20} className={iconClass("/admin/doctors")} /> Doctors
         </button>
         <button

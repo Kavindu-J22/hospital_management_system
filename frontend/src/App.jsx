@@ -15,6 +15,7 @@ import PatientDirectory from './pages/admin/PatientDirectory';
 import Queue from './pages/admin/Queue';
 import NewPatient from './pages/admin/NewPatient';
 import AdminDashboard from './pages/admin/Dashboard';
+import Doctors from './pages/admin/Doctors';
 import ScheduleAppointment from './pages/admin/ScheduleAppointment';
 import AdminPharmacyMap from './pages/admin/PharmacyMap';
 
@@ -55,6 +56,7 @@ function App() {
       <Route path="/admin/new-session" element={<NewSession role="admin" />} />
       <Route path="/admin/rooms" element={<RoomInventory />} />
       <Route path="/admin/room-allocation" element={<RoomAllocation />} />
+      <Route path="/admin/doctors" element={<Doctors />} />
 
       {/* Doctor Routes */}
       <Route path="/doctor" element={<DoctorLogin />} />
