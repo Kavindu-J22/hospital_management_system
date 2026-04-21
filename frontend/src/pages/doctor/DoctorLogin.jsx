@@ -29,11 +29,21 @@ const DoctorLogin = () => {
         navigate('/doctor/register');
     };
 
+    const handleBackHome = () => {
+        navigate('/');
+    };
+
     return (
         <div className="flex min-h-screen bg-white font-sans">
             {/* Left side Form */}
             <div className="flex flex-col flex-1 px-12 py-16 lg:px-24">
                 <div className="flex-1 max-w-md w-full mx-auto justify-center flex flex-col pt-12">
+                    <button
+                        onClick={handleBackHome}
+                        className="text-sm text-green-700 hover:text-green-800 font-medium mb-4 flex items-center gap-1"
+                    >
+                        ← Back to Home
+                    </button>
                     <h1 className="text-[44px] font-black mb-4 text-[#0f172a] tracking-tight">Doctor Login</h1>
                     <p className="text-gray-600 mb-12 text-[17px] font-medium">Be healthy</p>
 

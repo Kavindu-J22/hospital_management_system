@@ -26,11 +26,21 @@ const AdminLogin = () => {
         }
     };
 
+    const handleBackHome = () => {
+        navigate('/');
+    };
+
     return (
         <div className="flex min-h-screen bg-white font-sans">
             {/* Left side Form */}
             <div className="flex flex-col flex-1 px-12 py-16 lg:px-24">
                 <div className="flex-1 max-w-md w-full mx-auto justify-center flex flex-col pt-12">
+                    <button
+                        onClick={handleBackHome}
+                        className="text-sm text-black hover:text-gray-700 font-medium mb-4 flex items-center gap-1"
+                    >
+                        ← Back to Home
+                    </button>
                     <h1 className="text-5xl font-bold mb-4 text-black tracking-tight" style={{ letterSpacing: '-0.03em' }}>Employee Login</h1>
                     <p className="text-gray-600 mb-12 text-lg">Be healthy</p>
 

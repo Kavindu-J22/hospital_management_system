@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import Landing from './pages/Landing';
 import Login from './pages/patient/Login';
 import Register from './pages/patient/Register';
 import Specializations from './pages/patient/Specializations';
@@ -30,7 +31,8 @@ import RoomAllocation from './pages/admin/RoomAllocation';
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Login />} />
+      <Route path="/" element={<Landing />} />
+      <Route path="/patient" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/specializations" element={<Specializations />} />
       <Route path="/dashboard" element={<Dashboard />} />
