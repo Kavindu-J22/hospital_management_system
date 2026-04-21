@@ -44,11 +44,11 @@ const DoctorPrescriptions = () => {
                 <header className="bg-white px-8 py-4 flex items-center justify-end border-b border-gray-100 z-10 shrink-0">
                     <div className="flex items-center gap-3 cursor-pointer group">
                         <div className="text-right">
-                            <p className="text-[14px] font-bold text-[#0f172a] leading-tight group-hover:text-blue-600 transition-colors">Dr. Sarah Jenkins</p>
-                            <p className="text-[11px] text-gray-400 font-semibold tracking-wide">Chief Surgeon</p>
+                            <p className="text-[14px] font-bold text-[#0f172a] leading-tight group-hover:text-blue-600 transition-colors">{user?.fullName || 'Doctor'}</p>
+                            <p className="text-[11px] text-gray-400 font-semibold tracking-wide">{user?.specialization || 'Consultant'}</p>
                         </div>
                         <div className="w-10 h-10 bg-teal-50 rounded-full border-2 border-white shadow-sm overflow-hidden">
-                            <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Sarah&backgroundColor=bbf7d0" alt="Avatar" className="w-full h-full object-cover" />
+                            <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${user?.fullName || 'Sarah'}&backgroundColor=bbf7d0`} alt="Avatar" className="w-full h-full object-cover" />
                         </div>
                     </div>
                 </header>

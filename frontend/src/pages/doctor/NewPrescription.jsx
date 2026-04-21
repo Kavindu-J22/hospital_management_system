@@ -22,6 +22,7 @@ const calcAge = (dob) => {
 
 const NewPrescription = () => {
     const navigate = useNavigate();
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
     const [dbPatients, setDbPatients] = useState([]);
     const [search, setSearch] = useState('');
     const [selectedPatient, setSelectedPatient] = useState(null);
@@ -70,7 +71,6 @@ const NewPrescription = () => {
         }
         setSubmitting(true);
         try {
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
             await prescriptionAPI.create({
                 patientId: selectedPatient._id,
                 doctorId: user.id,
@@ -119,8 +119,8 @@ const NewPrescription = () => {
                 </div>
                 <div className="hidden md:flex items-center gap-10">
                     <nav className="flex items-center gap-8 text-[14px] font-bold text-gray-500">
-                        <button className="hover:text-blue-600 transition-colors">Patients</button>
-                        <button className="hover:text-blue-600 transition-colors">History</button>
+                        <button onClick={() => navigate('/doctor/patients')} className="hover:text-blue-600 transition-colors">Patients</button>
+                        <button onClick={() => navigate('/doctor/dashboard')} className="hover:text-blue-600 transition-colors">Dashboard</button>
                         <button className="hover:text-blue-600 transition-colors">Pharmacy</button>
                     </nav>
                     <div className="flex items-center gap-4">
@@ -129,9 +129,9 @@ const NewPrescription = () => {
                         </button>
                         <div className="flex items-center gap-3 bg-[#f8f9fc] px-3 py-1.5 rounded-full border border-gray-100 cursor-pointer">
                             <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden border border-white shadow-sm">
-                                <img src="https://api.dicebear.com/7.x/notionists/svg?seed=James&backgroundColor=e2e8f0" alt="Dr Smith" />
+                                <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${user?.fullName || 'Sarah'}&backgroundColor=e2e8f0`} alt="Avatar" />
                             </div>
-                            <span className="text-sm font-bold text-[#0f172a]">Dr. Smith</span>
+                            <span className="text-sm font-bold text-[#0f172a]">{user?.fullName || 'Doctor'}</span>
                         </div>
                     </div>
                 </div>
@@ -140,8 +140,8 @@ const NewPrescription = () => {
             <div className="w-full h-full flex flex-1">
                 <aside className="w-[280px] bg-white border-r border-gray-100 hidden lg:flex flex-col p-6 shrink-0">
                     <div className="mb-10">
-                        <h2 className="text-[16px] font-black text-[#0f172a] mb-1">Dr. James Smith</h2>
-                        <p className="text-[12px] font-bold text-gray-400 uppercase tracking-widest">General Practitioner</p>
+                        <h2 className="text-[16px] font-black text-[#0f172a] mb-1">{user?.fullName || 'Doctor'}</h2>
+                        <p className="text-[12px] font-bold text-gray-400 uppercase tracking-widest">{user?.specialization || 'General Practitioner'}</p>
                     </div>
                     <nav className="space-y-2">
                         <button onClick={() => navigate('/doctor/dashboard')} className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-xl transition-all text-[14px] font-bold text-gray-500 hover:bg-gray-50">

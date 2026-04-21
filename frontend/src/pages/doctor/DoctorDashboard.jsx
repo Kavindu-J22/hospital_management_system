@@ -70,7 +70,7 @@ const DoctorDashboard = () => {
                             <h1 className="text-[28px] font-black text-[#0f172a] mb-1 tracking-tight">Dashboard Overview</h1>
                             <p className="text-gray-500 font-medium text-[15px]">Here is what's happening with your practice today.</p>
                         </div>
-                        <button className="bg-[#0c3812] hover:bg-[#1a4a22] text-white px-6 py-3.5 rounded-xl font-bold transition-colors flex items-center gap-2 shadow-sm text-[14px]">
+                        <button onClick={() => navigate('/doctor/new-session')} className="bg-[#0c3812] hover:bg-[#1a4a22] text-white px-6 py-3.5 rounded-xl font-bold transition-colors flex items-center gap-2 shadow-sm text-[14px]">
                             <Plus size={18} /> Create New Session
                         </button>
                     </div>

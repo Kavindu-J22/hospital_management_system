@@ -176,7 +176,7 @@ const DoctorSessions = () => {
 
                     <div className="mb-8">
                         <h1 className="text-[28px] font-black tracking-tight mb-1">Dashboard Overview</h1>
-                        <p className="text-gray-500 font-medium">Welcome back, Dr. Jenkins. Here is what's happening today.</p>
+                        <p className="text-gray-500 font-medium">Welcome back, {user?.fullName || 'Doctor'}. Here is what's happening today.</p>
                     </div>
 
                     {/* Stats */}

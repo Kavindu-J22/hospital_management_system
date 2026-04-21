@@ -1,10 +1,18 @@
 const Patient = require('../models/Patient');
+const Appointment = require('../models/Appointment');
 
 // Get all patients (admin only)
 const getPatients = async (req, res) => {
   try {
     const { search, status, page = 1, limit = 20 } = req.query;
     const filter = {};
+
+    // If doctor, only show patients who have had appointments with them
+    if (req.user.role === 'doctor') {
+      const doctorAppointments = await Appointment.find({ doctor: req.user.id }).distinct('patient');
+      filter._id = { $in: doctorAppointments };
+    }
+
     if (status) filter.status = status;
     if (search) {
       filter.$or = [
@@ -73,10 +81,16 @@ const updatePatient = async (req, res) => {
 // Patient stats (admin dashboard)
 const getPatientStats = async (req, res) => {
   try {
-    const total = await Patient.countDocuments();
-    const critical = await Patient.countDocuments({ status: 'Critical' });
-    const stable = await Patient.countDocuments({ status: 'Stable' });
-    const recovering = await Patient.countDocuments({ status: 'Recovering' });
+    const filter = {};
+    if (req.user.role === 'doctor') {
+      const doctorAppointments = await Appointment.find({ doctor: req.user.id }).distinct('patient');
+      filter._id = { $in: doctorAppointments };
+    }
+
+    const total = await Patient.countDocuments(filter);
+    const critical = await Patient.countDocuments({ ...filter, status: 'Critical' });
+    const stable = await Patient.countDocuments({ ...filter, status: 'Stable' });
+    const recovering = await Patient.countDocuments({ ...filter, status: 'Recovering' });
     res.json({ success: true, data: { total, critical, stable, recovering } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
