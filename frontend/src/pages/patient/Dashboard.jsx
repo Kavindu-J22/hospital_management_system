@@ -88,7 +88,7 @@ const Dashboard = () => {
                                     <CalendarDays size={18} className="text-blue-600" />
                                     Upcoming Appointment
                                 </h2>
-                                <a href="#" className="text-blue-600 text-sm font-semibold hover:underline">View All</a>
+                                <button onClick={() => navigate('/appointments')} className="text-blue-600 text-sm font-semibold hover:underline">View All</button>
                             </div>
 
                             {loading ? (

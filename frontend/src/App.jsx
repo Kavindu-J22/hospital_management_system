@@ -7,6 +7,9 @@ import Dashboard from './pages/patient/Dashboard';
 import Pharmacy from './pages/patient/Pharmacy';
 import Billing from './pages/patient/Billing';
 import BookAppointment from './pages/patient/BookAppointment';
+import PatientAppointments from './pages/patient/Appointments';
+import PatientPrescriptions from './pages/patient/Prescriptions';
+import ConfirmAppointment from './pages/patient/ConfirmAppointment';
 
 // Admin Pages
 import AdminLogin from './pages/admin/Login';
@@ -41,6 +44,9 @@ function App() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/pharmacy" element={<Pharmacy />} />
       <Route path="/billing" element={<Billing />} />
+      <Route path="/appointments" element={<PatientAppointments />} />
+      <Route path="/prescriptions" element={<PatientPrescriptions />} />
+      <Route path="/confirm-appointment/:id" element={<ConfirmAppointment />} />
 
       {/* Admin Routes */}
       <Route path="/admin" element={<AdminLogin />} />
