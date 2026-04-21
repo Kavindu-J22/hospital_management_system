@@ -32,13 +32,30 @@ const getSessions = async (req, res) => {
 // Get sessions for a specific doctor
 const getDoctorSessions = async (req, res) => {
   try {
-    const { status } = req.query;
+    const { status, bookable } = req.query;
     const filter = { doctor: req.params.doctorId };
-    if (status) filter.status = status;
+
+    if (status) {
+      filter.status = status;
+    } else if (bookable !== 'false') {
+      // Default: only show upcoming/active sessions for booking
+      filter.status = { $in: ['Upcoming', 'Active'] };
+      // Only future sessions (from today onwards)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      filter.date = { $gte: today };
+    }
+
     const sessions = await Session.find(filter)
       .populate('room', 'roomNumber name floor')
-      .sort({ date: 1 });
-    res.json({ success: true, data: sessions });
+      .sort({ date: 1, startTime: 1 });
+
+    // For bookable sessions, filter out full ones
+    const result = (bookable !== 'false' && !status)
+      ? sessions.filter(s => s.currentPatients < s.maxPatients)
+      : sessions;
+
+    res.json({ success: true, data: result });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

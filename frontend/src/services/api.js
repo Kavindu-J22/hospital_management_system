@@ -54,6 +54,7 @@ export const adminAPI = {
 // ─── DOCTORS ──────────────────────────────────────────────────────────────────
 export const doctorAPI = {
   getAll: (params) => api.get('/doctors', { params }),
+  getPublic: (params) => api.get('/doctors/public', { params }), // no auth needed
   getPending: () => api.get('/doctors/pending'),
   getOne: (id) => api.get(`/doctors/${id}`),
   approve: (id) => api.patch(`/doctors/${id}/approve`),

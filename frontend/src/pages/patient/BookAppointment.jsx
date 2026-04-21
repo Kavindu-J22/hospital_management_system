@@ -43,14 +43,12 @@ const BookAppointment = () => {
       const fetchDoctors = async () => {
         setLoading(true);
         try {
-          const res = await doctorAPI.getAll({
+          const res = await doctorAPI.getPublic({
             specialization,
-            status: 'Approved',
-            availability: 'Available',
             limit: 100
           });
           setDoctors(res.data.data || []);
-          if (res.data.data.length === 0) {
+          if ((res.data.data || []).length === 0) {
             setError('No doctors available for this specialization');
           } else {
             setError('');
@@ -72,13 +70,12 @@ const BookAppointment = () => {
       const fetchSessions = async () => {
         setLoading(true);
         try {
-          const res = await sessionAPI.getByDoctor(selectedDoctor._id, {
-            status: 'Upcoming',
-            limit: 100
-          });
-          setSessions(res.data.data || []);
-          if (res.data.data.length === 0) {
-            setError('No sessions available for this doctor');
+          // No status param → backend returns upcoming/active sessions with available slots
+          const res = await sessionAPI.getByDoctor(selectedDoctor._id);
+          const sessions = res.data.data || [];
+          setSessions(sessions);
+          if (sessions.length === 0) {
+            setError('No available sessions for this doctor. Please try another doctor.');
           } else {
             setError('');
           }
@@ -274,32 +271,47 @@ const BookAppointment = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4">
-                {sessions.map(session => (
-                  <button
-                    key={session._id}
-                    onClick={() => handleSelectSession(session)}
-                    className="p-4 border-2 border-gray-200 rounded-xl hover:border-blue-600 hover:bg-blue-50 transition-all text-left"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <Calendar size={16} className="text-gray-500" />
-                          <span className="font-semibold text-gray-900">
-                            {new Date(session.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                {sessions.map(session => {
+                  const maxP = session.maxPatients || 12;
+                  const curP = session.currentPatients || 0;
+                  const available = maxP - curP;
+                  return (
+                    <button
+                      key={session._id}
+                      onClick={() => handleSelectSession(session)}
+                      className="p-4 border-2 border-gray-200 rounded-xl hover:border-blue-600 hover:bg-blue-50 transition-all text-left"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Calendar size={16} className="text-gray-500" />
+                            <span className="font-semibold text-gray-900">
+                              {new Date(session.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <Clock size={16} className="text-gray-500" />
+                            <span className="text-gray-600">{session.startTime} - {session.endTime}</span>
+                          </div>
+                          {session.roomNumber && (
+                            <p className="text-xs text-gray-400 mt-1">Room: {session.roomNumber}</p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-500 mb-1">Available Slots</p>
+                          <p className={`text-lg font-bold ${
+                            available > 5 ? 'text-green-600' : available > 0 ? 'text-orange-500' : 'text-red-500'
+                          }`}>{available} / {maxP}</p>
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                            available > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
+                          }`}>
+                            {available > 0 ? 'Open' : 'Full'}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Clock size={16} className="text-gray-500" />
-                          <span className="text-gray-600">{session.startTime} - {session.endTime}</span>
-                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm text-gray-500">Available Slots</p>
-                        <p className="text-lg font-bold text-gray-900">{session.maxPatients - session.currentPatients}</p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -92,11 +92,30 @@ const rejectDoctor = async (req, res) => {
   }
 };
 
-// Get all specializations
+// Get all specializations (public)
 const getSpecializations = async (req, res) => {
   try {
     const specializations = await Doctor.distinct('specialization', { status: 'Approved' });
     res.json({ success: true, data: specializations });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get public doctor listing (for patients - no auth required)
+const getPublicDoctors = async (req, res) => {
+  try {
+    const { specialization, availability, limit = 100 } = req.query;
+    const filter = { status: 'Approved' };
+    if (specialization) filter.specialization = specialization;
+    if (availability) filter.availability = availability;
+
+    const doctors = await Doctor.find(filter)
+      .select('fullName specialization availability bio avatar yearsOfExperience')
+      .sort({ fullName: 1 })
+      .limit(Number(limit));
+
+    res.json({ success: true, data: doctors, total: doctors.length });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -117,4 +136,4 @@ const updateDoctor = async (req, res) => {
   }
 };
 
-module.exports = { getDoctors, getPendingDoctors, getDoctor, approveDoctor, rejectDoctor, getSpecializations, updateDoctor };
+module.exports = { getDoctors, getPublicDoctors, getPendingDoctors, getDoctor, approveDoctor, rejectDoctor, getSpecializations, updateDoctor };

@@ -46,7 +46,7 @@ const Specializations = () => {
             try {
                 const [specRes, docRes] = await Promise.all([
                     doctorAPI.getSpecializations(),
-                    doctorAPI.getAll({ status: 'Approved', limit: 100 }),
+                    doctorAPI.getPublic({ limit: 100 }),
                 ]);
                 const specs = specRes.data.data || [];
                 const doctors = docRes.data.data || [];
